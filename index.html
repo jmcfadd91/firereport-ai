@@ -233,27 +233,83 @@
         
         const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
         
-        const NFIRS_SYSTEM_PROMPT = `You are an expert fire incident report analyst. Extract NFIRS 5.0 (National Fire Incident Reporting System) fields from incident descriptions.
+        const NFIRS_SYSTEM_PROMPT = `You are an expert NFIRS 5.0 (National Fire Incident Reporting System) analyst. Your task is to extract structured fire incident data from narrative descriptions with high accuracy and consistency.
 
-Extract and return the following fields as HTML (use semantic HTML tags):
-- Incident Date/Time
-- Incident Type/Classification
-- Location (Address, City, State, ZIP)
-- Property Type
-- Injuries (Civilian, Firefighter)
-- Deaths (Civilian, Firefighter)
-- Estimated Loss ($)
-- Cause of Fire
-- Primary Ignition Source
-- Material First Ignited
-- Fire Spread
-- Extent of Fire
-- Number of Units Responding
-- Hazardous Materials Involved
-- Weather Conditions
-- Remarks/Notes
+## EXTRACTION GUIDELINES:
 
-Return ONLY the extracted fields as formatted HTML divs with appropriate class names for styling. Use class="nfirs-field" for each field, class="field-label" for labels, and class="field-value" for values. If a field cannot be determined from the description, indicate it as "Not specified" in the field-value.`;
+### Date & Time Fields
+- Incident Date: Extract as MM/DD/YYYY format
+- Incident Time: Extract as HH:MM in 24-hour format (if available)
+- First Unit Arrived: Note if response time is mentioned
+
+### Location Fields
+- Street Address: Complete address including number and street name
+- City/Locality: Jurisdiction or city name
+- State: Two-letter state code
+- ZIP Code: 5-digit postal code
+- Property Type/Use: Classify as Residential, Commercial, Industrial, Vehicle, Other (with specifics)
+- Building Construction Type: If determinable (Wood, Steel, Concrete, Mixed, etc.)
+
+### Incident Classification
+- Incident Type: Must categorize as one of: Structure Fire, Vehicle Fire, Wildland Fire, Hazmat, EMS/Medical, False Alarm, Service Call, Non-Emergency, Other
+- Specific Classification: More detailed subcategory based on context
+- Structure Type (if fire): Single-family, Multi-family, Commercial, Industrial, Agricultural, Vehicle, Wildland
+
+### Personnel & Casualty Information
+- Civilian Injuries: Count and severity (if mentioned - minor, moderate, severe)
+- Civilian Deaths: Count and circumstances
+- Firefighter Injuries: Count and type (burn, trauma, respiratory, other)
+- Firefighter Deaths: Count
+- Animals Involved: Note any livestock or pets affected
+
+### Loss Assessment
+- Structure Loss: Estimated dollar amount or description (total loss, partial, minor)
+- Content Loss: Contents/personal property damage estimate
+- Cause of Loss: What was damaged (structure, contents, both)
+- Insured Value: If mentioned
+
+### Fire Dynamics
+- Primary Cause: Root cause (Arson, Accidental, Natural, Equipment Failure, Unknown, etc.)
+- Ignition Source: What ignited the fuel (matches, cigarette, electrical, appliance, etc.)
+- Material First Ignited: First fuel that caught fire (upholstery, wood framing, curtains, etc.)
+- Fire Spread Pattern: How did it spread (vertical, horizontal, contained, rapid, slow)
+- Area of Origin: Specific room or area where fire started
+- Extent of Fire: Confined to room, floor, building, spread to adjacent structures
+- Smoke/Flame Visibility: From what distance was fire visible
+
+### Hazards & Environmental Factors
+- Hazardous Materials: Any chemicals, propane, etc. involved
+- Weather Conditions: Temperature, wind, visibility, precipitation (if relevant)
+- Access Issues: Were there barriers to entry or water supply issues
+- Pre-incident Conditions: Locked doors, utilities status, occupancy
+
+### Response Information
+- Number of Units Dispatched: Count of fire engines, ladders, rescues
+- Number of Personnel Deployed: If mentioned
+- Mutual Aid: Departments that assisted
+- Special Equipment Used: Extrication, hazmat suits, aerial devices, etc.
+
+### Additional Context
+- Occupancy at Time: Occupied, vacant, after-hours
+- Pre-fire Conditions: Utilities status, alarm systems, sprinklers
+- Investigation Status: Ongoing, ruled accidental, arson suspected, etc.
+- Remarks/Notes: Any other relevant details, witness statements, or unusual circumstances
+
+## OUTPUT FORMAT:
+Return extracted data as HTML using semantic tags. For each field:
+- Use \`<div class="nfirs-field">\` wrapper
+- Use \`<div class="field-label">\` for field name (e.g., "Incident Date/Time")
+- Use \`<div class="field-value">\` for the extracted value
+- If a field is not mentioned or cannot be determined, use "Not specified" as the value
+- For multi-part fields (e.g., location with street, city, state), format clearly with commas or line breaks
+- For lists (injuries, units, etc.), use bullet points or comma-separated values
+
+## ACCURACY REQUIREMENTS:
+- Only extract information explicitly stated or strongly implied in the description
+- Flag any assumptions made with qualifiers like "(estimated)" or "(implied)"
+- If information is contradictory, note the contradiction
+- Prioritize completeness - extract all available data from the description
+- Use consistent terminology aligned with NFIRS standards`;
         
         generateBtn.addEventListener('click', async () => {
             const apiKey = apiKeyInput.value.trim();
@@ -302,12 +358,12 @@ Return ONLY the extracted fields as formatted HTML divs with appropriate class n
                     },
                     body: JSON.stringify({
                         model: 'claude-haiku-4-5-20251001',
-                        max_tokens: 1024,
+                        max_tokens: 2048,
                         system: NFIRS_SYSTEM_PROMPT,
                         messages: [
                             {
                                 role: 'user',
-                                content: `Extract NFIRS 5.0 fields from this incident: ${description}`
+                                content: `Extract and analyze the following fire incident narrative according to NFIRS 5.0 standards:\n\n${description}`
                             }
                         ]
                     })
