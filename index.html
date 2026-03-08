@@ -5,56 +5,341 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FireReport AI</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             background-color: #1a1a1a;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
-            margin: 0;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            margin-bottom: 30px;
+            color: #ff6b6b;
+        }
+        
+        .api-key-section {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .api-key-section label {
+            font-weight: 600;
+        }
+        
+        .api-key-section input {
+            flex: 1;
+            max-width: 400px;
+            padding: 8px 12px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .api-key-section input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+        
+        .input-section {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
         
         textarea {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #444;
+            min-height: 200px;
+            padding: 12px;
             background-color: #2a2a2a;
-            color: #ffffff;
+            border: 1px solid #444;
             border-radius: 4px;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+            font-size: 14px;
             resize: vertical;
-            min-height: 150px;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+        
+        textarea::placeholder {
+            color: #666;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 30px;
         }
         
         button {
             padding: 10px 20px;
-            margin-right: 10px;
             background-color: #ff6b6b;
-            color: white;
+            color: #1a1a1a;
             border: none;
             border-radius: 4px;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
+            transition: background-color 0.2s;
         }
         
         button:hover {
             background-color: #ff5252;
         }
         
+        button:active {
+            background-color: #ff4545;
+        }
+        
+        button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+        
         #output {
-            margin-top: 20px;
-            padding: 15px;
             background-color: #2a2a2a;
+            border: 1px solid #444;
             border-radius: 4px;
+            padding: 20px;
             min-height: 100px;
+            margin-top: 20px;
+        }
+        
+        #output:empty {
+            display: none;
+        }
+        
+        #output:not(:empty) {
+            display: block;
+        }
+        
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .output-header h2 {
+            margin: 0;
+            color: #ff6b6b;
+            font-size: 18px;
+        }
+        
+        .copy-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            padding: 12px;
+            background-color: #2a2a2a;
+            border: 1px solid #ff6b6b;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .loading {
+            color: #ffd700;
+        }
+        
+        .nfirs-field {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .nfirs-field:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .field-label {
+            font-weight: 600;
+            color: #ffd700;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        
+        .field-value {
+            color: #e0e0e0;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
-    <h1>FireReport AI</h1>
-    <textarea placeholder="Describe the incident..."></textarea>
-    <div>
-        <button id="generate-btn">Generate Report</button>
-        <button id="copy-btn">Copy</button>
+    <div class="container">
+        <h1>🚒 FireReport AI</h1>
+        
+        <div class="api-key-section">
+            <label for="apiKey">Anthropic API Key:</label>
+            <input 
+                type="password" 
+                id="apiKey" 
+                placeholder="sk-ant-..."
+                title="Your Anthropic API key will only be used for API calls from your browser"
+            >
+        </div>
+        
+        <div class="input-section">
+            <label for="incidentDescription">Incident Description:</label>
+            <textarea 
+                id="incidentDescription" 
+                placeholder="Describe the incident..."
+            ></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button id="generateBtn">Generate Report</button>
+            <button id="copyBtn" style="display: none;" class="copy-btn">Copy</button>
+        </div>
+        
+        <div id="output"></div>
     </div>
-    <div id="output"></div>
+    
+    <script>
+        const apiKeyInput = document.getElementById('apiKey');
+        const incidentTextarea = document.getElementById('incidentDescription');
+        const generateBtn = document.getElementById('generateBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const outputDiv = document.getElementById('output');
+        
+        const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+        
+        const NFIRS_SYSTEM_PROMPT = `You are an expert fire incident report analyst. Extract NFIRS 5.0 (National Fire Incident Reporting System) fields from incident descriptions.
+
+Extract and return the following fields as HTML (use semantic HTML tags):
+- Incident Date/Time
+- Incident Type/Classification
+- Location (Address, City, State, ZIP)
+- Property Type
+- Injuries (Civilian, Firefighter)
+- Deaths (Civilian, Firefighter)
+- Estimated Loss ($)
+- Cause of Fire
+- Primary Ignition Source
+- Material First Ignited
+- Fire Spread
+- Extent of Fire
+- Number of Units Responding
+- Hazardous Materials Involved
+- Weather Conditions
+- Remarks/Notes
+
+Return ONLY the extracted fields as formatted HTML divs with appropriate class names for styling. Use class="nfirs-field" for each field, class="field-label" for labels, and class="field-value" for values. If a field cannot be determined from the description, indicate it as "Not specified" in the field-value.`;
+        
+        generateBtn.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            const description = incidentTextarea.value.trim();
+            
+            if (!apiKey) {
+                showError('Please enter your Anthropic API key');
+                return;
+            }
+            
+            if (!description) {
+                showError('Please describe the incident');
+                return;
+            }
+            
+            await generateReport(apiKey, description);
+        });
+        
+        copyBtn.addEventListener('click', () => {
+            const html = outputDiv.innerHTML;
+            const text = outputDiv.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                showError('Failed to copy to clipboard');
+            });
+        });
+        
+        async function generateReport(apiKey, description) {
+            generateBtn.disabled = true;
+            outputDiv.innerHTML = '<div class="loading">Generating report...</div>';
+            copyBtn.style.display = 'none';
+            
+            try {
+                const response = await fetch(ANTHROPIC_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01',
+                        'content-type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-haiku-4-5-20251001',
+                        max_tokens: 1024,
+                        system: NFIRS_SYSTEM_PROMPT,
+                        messages: [
+                            {
+                                role: 'user',
+                                content: `Extract NFIRS 5.0 fields from this incident: ${description}`
+                            }
+                        ]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || `API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const reportContent = data.content[0].text;
+                
+                outputDiv.innerHTML = `
+                    <div class="output-header">
+                        <h2>NFIRS Report</h2>
+                    </div>
+                    ${reportContent}
+                `;
+                copyBtn.style.display = 'inline-block';
+                
+            } catch (error) {
+                showError(`Error: ${error.message}`);
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+        
+        function showError(message) {
+            outputDiv.innerHTML = `<div class="error">${message}</div>`;
+            copyBtn.style.display = 'none';
+        }
+    </script>
 </body>
 </html>
